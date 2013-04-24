@@ -1,0 +1,16 @@
+{
+  "name": "chat-client",
+  "repo": "JayceTDE/chat-client",
+  "description": "Client side of a socket.io based chat application",
+  "version": "0.0.1",
+  "keywords": [],
+  "dependencies": {
+    "LearnBoost/socket.io-client": "*",
+    "component/emitter": "*"
+  },
+  "development": {},
+  "license": "MIT",
+  "scripts": [
+    "index.js"
+  ]
+}
