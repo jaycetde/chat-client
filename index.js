@@ -11,6 +11,8 @@ function Conversation(userId, userName, parent) {
 	this.userId = userId;
 	this.userName = userName;
 
+	this.parent = parent;
+
 	this.el = document.createElement('div');
 	classes(this.el).add('chat-conversation');
 
@@ -20,13 +22,15 @@ inherit(Conversation, Emitter);
 
 Conversation.prototype.send = function (msg) {
 
-	
+	this.parent.send(this.userId, this.userName, msg);
+
+	return this;
 
 };
 
 Conversation.prototype.close = function () {
 
-
+	
 
 };
 
@@ -85,21 +89,33 @@ Client.prototype._reconnect_failed = function () {
 
 };
 
-Client.prototype._receiveMessage = function () {
+Client.prototype._receiveMessage = function (userInfo, msg) {
 
-
+	
 
 };
 
 Client.prototype._distribute = function () {
 
-
+	
 
 };
 
 Client.prototype.createConversation = function (userId, userName) {
 
-	this.emit('conversation-created');
+	var conversation = new Conversation(userId, userName, this);
+
+	this.emit('conversation-created', conversation);
+
+	return conversation;
+
+};
+
+Client.prototype.send = function (userId, userName, msg) {
+
+	this.socket.emit('msg', { userId: userId, userName: userName }, msg);
+
+	return this;
 
 };
 
