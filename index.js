@@ -6,10 +6,9 @@ var io = require('socket.io')
 	, inherit = require('inherit')
 ;
 
-function Conversation(userId, userName, parent) {
+function Conversation(targetInfo, parent) {
 
-	this.userId = userId;
-	this.userName = userName;
+	this.targetInfo = targetInfo;
 
 	this.parent = parent;
 
@@ -22,7 +21,7 @@ inherit(Conversation, Emitter);
 
 Conversation.prototype.send = function (msg) {
 
-	this.parent.send(this.userId, this.userName, msg);
+	this.parent.send(this.targetInfo, msg);
 
 	return this;
 
@@ -30,7 +29,7 @@ Conversation.prototype.send = function (msg) {
 
 Conversation.prototype.close = function () {
 
-	
+	this.parent.close(this);
 
 };
 
@@ -89,21 +88,25 @@ Client.prototype._reconnect_failed = function () {
 
 };
 
-Client.prototype._receiveMessage = function (userInfo, msg) {
+Client.prototype._receiveMessage = function (targetInfo, msg) {
 
-	
+	var conversation = this.get(targetInfo) || this.createConversation(targetInfo);
 
-};
-
-Client.prototype._distribute = function () {
-
-	
+	conversation.push(msg);
 
 };
 
-Client.prototype.createConversation = function (userId, userName) {
+Client.prototype._distribute = function (targetInfo, msg) {
 
-	var conversation = new Conversation(userId, userName, this);
+	var conversation = this.get(targetInfo) || this.createConversation(targetInfo);
+
+	conversation.push(msg);
+
+};
+
+Client.prototype.createConversation = function (targetInfo) {
+
+	var conversation = new Conversation(targetInfo, this);
 
 	this.emit('conversation-created', conversation);
 
@@ -111,11 +114,25 @@ Client.prototype.createConversation = function (userId, userName) {
 
 };
 
-Client.prototype.send = function (userId, userName, msg) {
+Client.prototype.get = function (targetInfo) {
 
-	this.socket.emit('msg', { userId: userId, userName: userName }, msg);
+	return this.idProp ? this.conversations[targetInfo[this.idProp]] : this.conversations[targetInfo];
+
+};
+
+Client.prototype.send = function (targetInfo, msg) {
+
+	this.socket.emit('msg', targetInfo, msg);
 
 	return this;
+
+};
+
+Client.prototype.close = function (conversation) {
+
+	if (conversation && !(conversation instanceof Conversation)) {
+		conversation = this.get(conversation);
+	}
 
 };
 
